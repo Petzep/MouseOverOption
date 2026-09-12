@@ -5,19 +5,21 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.List;
 import javax.inject.Inject;
 
 import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
 import net.runelite.api.MenuAction;
 import net.runelite.api.MenuEntry;
+import net.runelite.client.config.Config;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayPosition;
 import net.runelite.client.ui.overlay.components.LayoutableRenderableEntity;
 import net.runelite.client.ui.overlay.tooltip.Tooltip;
 import net.runelite.client.ui.overlay.tooltip.TooltipManager;
-import net.runelite.client.util.ColorUtil;
+import net.runelite.client.ui.overlay.components.ComponentConstants;
 
 /**
  * Adds a small "+N options" tooltip underneath the vanilla mouseover tooltip
@@ -98,7 +100,7 @@ public class MouseoverOptionsOverlay extends Overlay
         // to subtract - this now matches the native "N more options" count.
         int extra = realOptions - 1;
 
-        client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "All options: " + menuEntries.length + " filtered: " + realOptions, null);
+        //client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "All options: " + menuEntries.length + " filtered: " + realOptions, null);
 
         if (extra < Math.max(1, config.minimumOptions()))
         {
@@ -107,7 +109,7 @@ public class MouseoverOptionsOverlay extends Overlay
 
         // Add tooltip
         String label = "+" + extra + (extra == 1 ? " option" : " options");
-        tooltipManager.add(new Tooltip(new ScaledOptionsBadge(label, config.textColor(), 0.8f)));
+        tooltipManager.add(new Tooltip(new ScaledOptionsBadge(tooltipManager, label, config.textColor(), 0.75f)));
 
         return null;
     }
@@ -158,16 +160,18 @@ public class MouseoverOptionsOverlay extends Overlay
     {
         private static final int PADDING = 0;
 
+        private final TooltipManager tooltipManager;
         private final String text;
-        private final Color color;
-        private final float fontScale; // e.g. 0.8f ≈ enhanced client's smaller badge
+        private final Color textColor;
+        private final float fontScale;
         private Point location = new Point(0, 0);
         private Rectangle bounds = new Rectangle();
 
-        private ScaledOptionsBadge(String text, Color color, float fontScale)
+        private ScaledOptionsBadge(TooltipManager tooltipManager, String text, Color textColor, float fontScale)
         {
+            this.tooltipManager = tooltipManager;
             this.text = text;
-            this.color = color;
+            this.textColor = textColor;
             this.fontScale = fontScale;
         }
 
@@ -177,18 +181,20 @@ public class MouseoverOptionsOverlay extends Overlay
             Font base = graphics.getFont();
             Font scaled = base.deriveFont(base.getSize2D() * fontScale);
             graphics.setFont(scaled);
-
             FontMetrics metrics = graphics.getFontMetrics();
+
             int width = metrics.stringWidth(text) + PADDING * 2;
             int height = metrics.getHeight() + PADDING * 2;
 
             // Right-align the badge under the cursor position TooltipOverlay gave us.
             int x = location.x;
-            int y = location.y;
+            int y = location.y - (ComponentConstants.STANDARD_BORDER / 2);
 
-            graphics.setColor(new Color(0, 0, 0, 200));
+            graphics.setColor(Color.BLACK);
+            graphics.drawRect(x,y, width, height);
+            graphics.setColor(ComponentConstants.STANDARD_BACKGROUND_COLOR);
             graphics.fillRect(x, y, width, height);
-            graphics.setColor(color);
+            graphics.setColor(textColor);
             graphics.drawString(text, x + PADDING, y + height - metrics.getDescent() - PADDING / 2);
 
             bounds = new Rectangle(x, y, width, height);
