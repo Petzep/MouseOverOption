@@ -104,7 +104,7 @@ public class MouseoverOptionsOverlay extends Overlay
             realOptions++;
         }
 
-        client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "All options: " + menuEntries.length + " filtered: " + realOptions, null);
+        //client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "All options: " + menuEntries.length + " filtered: " + realOptions, null);
 
         if (realOptions < Math.max(1, config.minimumOptions()))
         {
@@ -122,7 +122,7 @@ public class MouseoverOptionsOverlay extends Overlay
         String sanitizedText = Text.removeTags(primaryText);
         int size = sanitizedText.length();
         //client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "Primary text: [" + Text.escapeJagex(primaryText) + "], Sanitized text: [" + sanitizedText + "]  size: [" + size + "]", null);
-        client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "Sanitized text: [" + sanitizedText + "]  size: [" + size + "]", null);
+        //client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "Sanitized text: [" + sanitizedText + "]  size: [" + size + "]", null);
 
         // Add tooltip
         String label = "+" + realOptions + (realOptions == 1 ? " option" : " options");
