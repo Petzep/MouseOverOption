@@ -87,7 +87,7 @@ public class MouseoverOptionsOverlay extends Overlay
         // Skip if no primary action is shown
         // Last item is the top priority
         MenuEntry primaryEntry = menuEntries[menuEntries.length - 1];
-        if (primaryEntry.isDeprioritized())
+        if (primaryEntry.isDeprioritized() || (primaryEntry.getOption() == null || primaryEntry.getTarget().isEmpty()))
         {
             return null;
         }
@@ -119,8 +119,8 @@ public class MouseoverOptionsOverlay extends Overlay
                 ? optionText + " " + targetText
                 : optionText + targetText;
 
-        String sanitizedText = Text.removeTags(primaryText);
-        int size = sanitizedText.length();
+        //String sanitizedText = Text.removeTags(primaryText);
+        //int size = sanitizedText.length();
         //client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "Primary text: [" + Text.escapeJagex(primaryText) + "], Sanitized text: [" + sanitizedText + "]  size: [" + size + "]", null);
         //client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "Sanitized text: [" + sanitizedText + "]  size: [" + size + "]", null);
 
