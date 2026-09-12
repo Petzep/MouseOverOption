@@ -27,7 +27,7 @@ public interface MouseoverOptionsConfig extends Config
     )
     default boolean includeExamine()
     {
-        return false;
+        return true;
     }
 
     @ConfigItem(
@@ -39,7 +39,7 @@ public interface MouseoverOptionsConfig extends Config
     )
     default boolean showOnWidgets()
     {
-        return false;
+        return true;
     }
 
     @ConfigItem(
