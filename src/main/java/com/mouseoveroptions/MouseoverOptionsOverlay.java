@@ -5,14 +5,15 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.List;
 import javax.inject.Inject;
 
 import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
 import net.runelite.api.MenuAction;
 import net.runelite.api.MenuEntry;
-import net.runelite.client.config.Config;
+import net.runelite.client.ui.FontManager;
+import net.runelite.client.ui.overlay.OverlayPriority;
+import net.runelite.client.util.Text;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayPosition;
@@ -83,6 +84,14 @@ public class MouseoverOptionsOverlay extends Overlay
             return null;
         }
 
+        // Skip if no primary action is shown
+        // Last item is the top priority
+        MenuEntry primaryEntry = menuEntries[menuEntries.length - 1];
+        if (primaryEntry.isDeprioritized())
+        {
+            return null;
+        }
+
         int realOptions = 0;
 
         for (MenuEntry entry : menuEntries)
@@ -95,21 +104,29 @@ public class MouseoverOptionsOverlay extends Overlay
             realOptions++;
         }
 
-        // realOptions already excludes "Walk here"/"Cancel" etc, so the
-        // primary action (shown by the name tooltip) is the only thing left
-        // to subtract - this now matches the native "N more options" count.
-        int extra = realOptions - 1;
+        client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "All options: " + menuEntries.length + " filtered: " + realOptions, null);
 
-        //client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "All options: " + menuEntries.length + " filtered: " + realOptions, null);
-
-        if (extra < Math.max(1, config.minimumOptions()))
+        if (realOptions < Math.max(1, config.minimumOptions()))
         {
             return null;
         }
 
+        String optionText = primaryEntry.getTarget().isEmpty() ? "" : primaryEntry.getOption();
+        String targetText = primaryEntry.getTarget() == null ? "" : primaryEntry.getTarget();
+
+        // Join strings with space if both are non-empty
+        String primaryText = !optionText.isEmpty() && !targetText.isEmpty()
+                ? optionText + " " + targetText
+                : optionText + targetText;
+
+        String sanitizedText = Text.removeTags(primaryText);
+        int size = sanitizedText.length();
+        //client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "Primary text: [" + Text.escapeJagex(primaryText) + "], Sanitized text: [" + sanitizedText + "]  size: [" + size + "]", null);
+        client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "Sanitized text: [" + sanitizedText + "]  size: [" + size + "]", null);
+
         // Add tooltip
-        String label = "+" + extra + (extra == 1 ? " option" : " options");
-        tooltipManager.add(new Tooltip(new ScaledOptionsBadge(tooltipManager, label, config.textColor(), 0.75f)));
+        String label = "+" + realOptions + (realOptions == 1 ? " option" : " options");
+        tooltipManager.add(new Tooltip(new ScaledOptionsBadge(primaryText, label, config.textColor(), 0.75f)));
 
         return null;
     }
@@ -149,7 +166,7 @@ public class MouseoverOptionsOverlay extends Overlay
             case EXAMINE_OBJECT:
             case EXAMINE_NPC:
             case EXAMINE_ITEM_GROUND:
-            case EXAMINE_ITEM:
+            case EXAMINE_WORLD_ENTITY:
                 return true;
             default:
                 return false;
@@ -160,16 +177,16 @@ public class MouseoverOptionsOverlay extends Overlay
     {
         private static final int PADDING = 0;
 
-        private final TooltipManager tooltipManager;
+        private final String primaryText;
         private final String text;
         private final Color textColor;
         private final float fontScale;
         private Point location = new Point(0, 0);
         private Rectangle bounds = new Rectangle();
 
-        private ScaledOptionsBadge(TooltipManager tooltipManager, String text, Color textColor, float fontScale)
+        private ScaledOptionsBadge(String primaryText, String text, Color textColor, float fontScale)
         {
-            this.tooltipManager = tooltipManager;
+            this.primaryText = Text.removeTags(primaryText);
             this.text = text;
             this.textColor = textColor;
             this.fontScale = fontScale;
@@ -183,11 +200,15 @@ public class MouseoverOptionsOverlay extends Overlay
             graphics.setFont(scaled);
             FontMetrics metrics = graphics.getFontMetrics();
 
+            // Calculated width of the primary menu item
+            Font primaryFont = FontManager.getRunescapeSmallFont();
+            int primaryWidth = graphics.getFontMetrics(primaryFont).stringWidth(primaryText) + 2 * ComponentConstants.STANDARD_BORDER - 1;
+
             int width = metrics.stringWidth(text) + PADDING * 2;
             int height = metrics.getHeight() + PADDING * 2;
 
             // Right-align the badge under the cursor position TooltipOverlay gave us.
-            int x = location.x;
+            int x = location.x + Math.max(primaryWidth - width, 0);
             int y = location.y - (ComponentConstants.STANDARD_BORDER / 2);
 
             graphics.setColor(Color.BLACK);
