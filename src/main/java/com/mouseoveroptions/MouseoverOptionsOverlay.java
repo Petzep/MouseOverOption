@@ -7,12 +7,14 @@ import java.util.HashSet;
 import java.util.Set;
 import javax.inject.Inject;
 
-import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
 import net.runelite.api.MenuAction;
 import net.runelite.api.MenuEntry;
+import net.runelite.api.gameval.InterfaceID;
+import net.runelite.api.widgets.WidgetUtil;
 import net.runelite.client.ui.FontManager;
-import net.runelite.client.ui.overlay.OverlayPriority;
+import net.runelite.api.Player;
+import net.runelite.api.widgets.Widget;
 import net.runelite.client.util.Text;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
@@ -69,6 +71,34 @@ public class MouseoverOptionsOverlay extends Overlay
         setLayer(OverlayLayer.ABOVE_SCENE);
     }
 
+    /**
+     * Contexts where the extra-options badge should never appear, even if
+     * there are extra menu entries: hovering another player (PvP - don't
+     * leak how many options they have) and the prayer/quick-prayers panel.
+     */
+    private boolean isExcludedContext(MenuEntry[] menuEntries)
+    {
+        for (MenuEntry entry : menuEntries)
+        {
+            Player player = entry.getPlayer();
+            if (player != null && player != client.getLocalPlayer())
+            {
+                return true;
+            }
+
+            Widget widget = entry.getWidget();
+            if (widget != null)
+            {
+                int interfaceId = WidgetUtil.componentToInterface(widget.getId());
+                if (interfaceId == InterfaceID.PRAYERBOOK || interfaceId == InterfaceID.QUICKPRAYER)
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     @Override
     public Dimension render(Graphics2D graphics)
     {
@@ -80,6 +110,11 @@ public class MouseoverOptionsOverlay extends Overlay
 
         MenuEntry[] menuEntries = client.getMenu().getMenuEntries();
         if (menuEntries == null || menuEntries.length == 0)
+        {
+            return null;
+        }
+
+        if (isExcludedContext(menuEntries))
         {
             return null;
         }
