@@ -19,7 +19,7 @@ import net.runelite.client.ui.overlay.OverlayManager;
  * renderer.
  */
 @PluginDescriptor(
-		name = "Mouseover Options+",
+		name = "Mouseover Options",
 		description = "Shows a '+N options' badge under the hover tooltip, like the old Steam/Enhanced client, "
 				+ "indicating how many extra right-click options are available",
 		tags = {"tooltip", "menu", "options", "mouseover", "hover", "steam", "enhanced"}
